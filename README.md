@@ -1,7 +1,7 @@
 --// 99 Nights in the Forest Script with Orion UI //--
 
 -- Load Orion UI Library
-local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
+local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/jensonhirst/Orion/main/source"))()
 
 -- Services
 local Players = game:GetService("Players")
