@@ -1,42 +1,36 @@
---// 99 Nights in the Forest Script with Rayfield GUI //--
+--// 99 Nights in the Forest Script with Orion UI //--
 
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+-- Load Orion UI Library
+local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
 
+-- Services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 local camera = workspace.CurrentCamera
 
-local Window = Rayfield:CreateWindow({
+-- Configurar tema verde
+local greenTheme = {
+    Main = Color3.fromRGB(0, 150, 0),
+    Background = Color3.fromRGB(20, 40, 20),
+    Accent = Color3.fromRGB(0, 100, 0),
+    LightContrast = Color3.fromRGB(40, 80, 40),
+    DarkContrast = Color3.fromRGB(10, 30, 10),
+    TextColor = Color3.fromRGB(200, 255, 200)
+}
+
+-- Window Setup
+local Window = OrionLib:MakeWindow({
     Name = "🍀light hub⚡️",
-    LoadingTitle = "99 Nights Script",
-    LoadingSubtitle = "by LIGHT SCRIPTS",
-    ConfigurationSaving = {
-        Enabled = true,
-        FolderName = nil,
-        FileName = "99NightsSettings"
-    },
-    Discord = {Enabled = false, Invite = "", RememberJoins = true},
-    KeySystem = false,
+    HidePremium = false,
+    SaveConfig = true,
+    ConfigFolder = "99NightsSettings",
+    IntroEnabled = false,
+    Theme = greenTheme
 })
 
--- Fundo Rayfield verde, 40% transparente
-task.spawn(function()
-    repeat
-        task.wait()
-    until game.CoreGui:FindFirstChild("Rayfield")
-    local gui = game.CoreGui:FindFirstChild("Rayfield")
-    if gui then
-        for _, frame in ipairs(gui:GetDescendants()) do
-            if frame:IsA("Frame") and frame.Name == "Background" then
-                frame.BackgroundColor3 = Color3.fromRGB(0,255,0)
-                frame.BackgroundTransparency = 0.4
-            end
-        end
-    end
-end)
-
+-- Variables
 local teleportTargets = {
     "Alien", "Alien Chest", "Alien Shelf", "Alpha Wolf", "Alpha Wolf Pelt", "Anvil Base", "Apple", "Bandage", "Bear", "Berry",
     "Bolt", "Broken Fan", "Broken Microwave", "Bunny", "Bunny Foot", "Cake", "Carrot", "Chair Set", "Chest", "Chilli",
@@ -47,23 +41,27 @@ local teleportTargets = {
     "Steak", "Stronghold Diamond Chest", "Tyre", "UFO Component", "UFO Junk", "Washing Machine", "Wolf", "Wolf Corpse", "Wolf Pelt"
 }
 local AimbotTargets = {"Alien", "Alpha Wolf", "Wolf", "Crossbow Cultist", "Cultist", "Bunny", "Bear", "Polar Bear"}
-local espEnabled, npcESPEnabled, AutoTreeFarmEnabled, InfiniteJumpEnabled = false, false, false, false
+local espEnabled = false
+local npcESPEnabled = false
 local ignoreDistanceFrom = Vector3.new(0, 0, 0)
 local minDistance = 50
+local AutoTreeFarmEnabled = false
 
+-- Click simulation
 local VirtualInputManager = game:GetService("VirtualInputManager")
 function mouse1click()
     VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
     VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
 end
 
+-- Aimbot FOV Circle
 local AimbotEnabled = false
 local FOVRadius = 100
 local FOVCircle = Drawing.new("Circle")
-FOVCircle.Color = Color3.fromRGB(0,255,0)
+FOVCircle.Color = Color3.fromRGB(0, 255, 0)  -- Verde
 FOVCircle.Thickness = 1
 FOVCircle.Radius = FOVRadius
-FOVCircle.Transparency = 0.4
+FOVCircle.Transparency = 0.5
 FOVCircle.Filled = false
 FOVCircle.Visible = false
 
@@ -77,6 +75,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
+-- ESP Function
 local function createESP(item)
     local adorneePart
     if item:IsA("Model") then
@@ -87,9 +86,12 @@ local function createESP(item)
     else
         return
     end
+
     if not adorneePart then return end
+
     local distance = (adorneePart.Position - ignoreDistanceFrom).Magnitude
     if distance < minDistance then return end
+
     if not item:FindFirstChild("ESP_Billboard") then
         local billboard = Instance.new("BillboardGui")
         billboard.Name = "ESP_Billboard"
@@ -97,22 +99,24 @@ local function createESP(item)
         billboard.Size = UDim2.new(0, 50, 0, 20)
         billboard.AlwaysOnTop = true
         billboard.StudsOffset = Vector3.new(0, 2, 0)
+
         local label = Instance.new("TextLabel", billboard)
         label.Size = UDim2.new(1, 0, 1, 0)
         label.Text = item.Name
-        label.BackgroundTransparency = 1
-        label.TextColor3 = Color3.fromRGB(0,255,0)
-        label.TextStrokeTransparency = 0.6
+        label.BackgroundTransparency = 0.9
+        label.TextColor3 = Color3.fromRGB(0, 255, 0)  -- Verde
+        label.TextStrokeTransparency = 0
         label.TextScaled = true
         billboard.Parent = item
     end
+
     if not item:FindFirstChild("ESP_Highlight") then
         local highlight = Instance.new("Highlight")
         highlight.Name = "ESP_Highlight"
-        highlight.FillColor = Color3.fromRGB(0,255,0)
-        highlight.OutlineColor = Color3.fromRGB(0,128,0)
-        highlight.FillTransparency = 0.4
-        highlight.OutlineTransparency = 0.4
+        highlight.FillColor = Color3.fromRGB(0, 200, 0)  -- Verde
+        highlight.OutlineColor = Color3.fromRGB(0, 100, 0)  -- Verde escuro
+        highlight.FillTransparency = 0.25
+        highlight.OutlineTransparency = 0
         highlight.Adornee = item:IsA("Model") and item or adorneePart
         highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
         highlight.Parent = item
@@ -140,26 +144,33 @@ workspace.DescendantAdded:Connect(function(desc)
     end
 end)
 
+-- ESP for NPCs
 local npcBoxes = {}
+
 local function createNPCESP(npc)
     if not npc:IsA("Model") or npc:FindFirstChild("HumanoidRootPart") == nil then return end
+
     local root = npc:FindFirstChild("HumanoidRootPart")
     if npcBoxes[npc] then return end
+
     local box = Drawing.new("Square")
     box.Thickness = 2
-    box.Transparency = 0.4
-    box.Color = Color3.fromRGB(0,255,0)
+    box.Transparency = 1
+    box.Color = Color3.fromRGB(0, 255, 0)  -- Verde
     box.Filled = false
     box.Visible = true
+
     local nameText = Drawing.new("Text")
     nameText.Text = npc.Name
-    nameText.Color = Color3.fromRGB(0,255,0)
+    nameText.Color = Color3.fromRGB(0, 255, 0)  -- Verde
     nameText.Size = 16
     nameText.Center = true
     nameText.Outline = true
-    nameText.Transparency = 0.4
     nameText.Visible = true
+
     npcBoxes[npc] = {box = box, name = nameText}
+
+    -- Cleanup on remove
     npc.AncestryChanged:Connect(function(_, parent)
         if not parent and npcBoxes[npc] then
             npcBoxes[npc].box:Remove()
@@ -178,6 +189,7 @@ local function toggleNPCESP(state)
         end
         npcBoxes = {}
     else
+        -- Show NPC ESP for already existing NPCs
         for _, obj in ipairs(workspace:GetDescendants()) do
             if table.find(AimbotTargets, obj.Name) and obj:IsA("Model") then
                 createNPCESP(obj)
@@ -195,7 +207,9 @@ workspace.DescendantAdded:Connect(function(desc)
     end
 end)
 
+-- Auto Tree Farm Logic with timeout
 local badTrees = {}
+
 task.spawn(function()
     while true do
         if AutoTreeFarmEnabled then
@@ -208,10 +222,12 @@ task.spawn(function()
                     end
                 end
             end
+
             table.sort(trees, function(a, b)
                 return (a.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude <
                        (b.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
             end)
+
             for _, trunk in ipairs(trees) do
                 if not AutoTreeFarmEnabled then break end
                 LocalPlayer.Character:PivotTo(trunk.CFrame + Vector3.new(0, 3, 0))
@@ -232,20 +248,24 @@ task.spawn(function()
     end
 end)
 
+-- Optimized Aimbot Logic
 local lastAimbotCheck = 0
-local aimbotCheckInterval = 0.02
-local smoothness = 0.2
+local aimbotCheckInterval = 0.02 -- Faster reaction time
+local smoothness = 0.2 -- Smooth camera interpolation
 
 RunService.RenderStepped:Connect(function()
     if not AimbotEnabled or not UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
         FOVCircle.Visible = false
         return
     end
+
     local currentTime = tick()
     if currentTime - lastAimbotCheck < aimbotCheckInterval then return end
     lastAimbotCheck = currentTime
+
     local mousePos = UserInputService:GetMouseLocation()
     local closestTarget, shortestDistance = nil, math.huge
+
     for _, obj in ipairs(workspace:GetDescendants()) do
         if table.find(AimbotTargets, obj.Name) and obj:IsA("Model") then
             local head = obj:FindFirstChild("Head")
@@ -261,10 +281,11 @@ RunService.RenderStepped:Connect(function()
             end
         end
     end
+
     if closestTarget then
         local currentCF = camera.CFrame
         local targetCF = CFrame.new(camera.CFrame.Position, closestTarget.Position)
-        camera.CFrame = currentCF:Lerp(targetCF, smoothness)
+        camera.CFrame = currentCF:Lerp(targetCF, smoothness) -- Smoothly rotate camera
         FOVCircle.Position = Vector2.new(mousePos.X, mousePos.Y)
         FOVCircle.Visible = true
     else
@@ -272,18 +293,21 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
+-- Fly Logic
 local flying, flyConnection = false, nil
 local speed = 60
 
 local function startFlying()
     local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
+
     local bodyGyro = Instance.new("BodyGyro", hrp)
     local bodyVelocity = Instance.new("BodyVelocity", hrp)
     bodyGyro.P = 9e4
     bodyGyro.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
     bodyGyro.CFrame = hrp.CFrame
     bodyVelocity.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+
     flyConnection = RunService.RenderStepped:Connect(function()
         local moveVec = Vector3.zero
         local camCF = camera.CFrame
@@ -324,14 +348,17 @@ RunService.RenderStepped:Connect(function()
     for npc, visuals in pairs(npcBoxes) do
         local box = visuals.box
         local name = visuals.name
+
         if npc and npc:FindFirstChild("HumanoidRootPart") then
             local hrp = npc.HumanoidRootPart
             local size = Vector2.new(60, 80)
             local screenPos, onScreen = camera:WorldToViewportPoint(hrp.Position)
+
             if onScreen then
                 box.Position = Vector2.new(screenPos.X - size.X / 2, screenPos.Y - size.Y / 2)
                 box.Size = size
                 box.Visible = true
+
                 name.Position = Vector2.new(screenPos.X, screenPos.Y - size.Y / 2 - 15)
                 name.Visible = true
             else
@@ -346,26 +373,118 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
-UserInputService.JumpRequest:Connect(function()
-    if InfiniteJumpEnabled and LocalPlayer and LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-        LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
-    end
-end)
+-- GUI Tabs
+local HomeTab = Window:MakeTab({
+    Name = "🏠Home🏠",
+    Icon = "rbxassetid://4483362458",
+    PremiumOnly = false
+})
 
--- Home Tab
-local HomeTab = Window:CreateTab("🏠Home🏠", 4483362458)
-HomeTab:CreateButton({Name = "Teleport to Campfire", Callback = function() LocalPlayer.Character:PivotTo(CFrame.new(0,10,0)) end})
-HomeTab:CreateButton({Name = "Teleport to Grinder", Callback = function() LocalPlayer.Character:PivotTo(CFrame.new(16.1,4,-4.6)) end})
-HomeTab:CreateToggle({Name = "Item ESP", CurrentValue = false, Callback = toggleESP})
-HomeTab:CreateToggle({Name = "NPC ESP", CurrentValue = false, Callback = function(value) toggleNPCESP(value) Rayfield:Notify({Title = "NPC ESP", Content = value and "NPC ESP Enabled" or "NPC ESP Disabled", Duration = 4, Image = 4483362458}) end})
-HomeTab:CreateToggle({Name = "Auto Tree Farm (Small Tree)", CurrentValue = false, Callback = function(value) AutoTreeFarmEnabled = value end})
-HomeTab:CreateToggle({Name = "Aimbot (Right Click)", CurrentValue = false, Callback = function(value) AimbotEnabled = value Rayfield:Notify({Title = "Aimbot", Content = value and "Enabled - Hold Right Click to aim." or "Disabled.", Duration = 4, Image = 4483362458}) end})
-HomeTab:CreateToggle({Name = "Fly (WASD + Space + Shift)", CurrentValue = false, Callback = function(value) toggleFly(value) Rayfield:Notify({Title = "Fly", Content = value and "Fly Enabled" or "Fly Disabled", Duration = 4, Image = 4483362458}) end})
+HomeTab:AddButton({
+    Name = "Teleport to Campfire",
+    Callback = function()
+        LocalPlayer.Character:PivotTo(CFrame.new(0, 10, 0))
+        OrionLib:MakeNotification({
+            Name = "Teleport",
+            Content = "Teleported to Campfire!",
+            Image = "rbxassetid://4483362458",
+            Time = 3
+        })
+    end
+})
+
+HomeTab:AddButton({
+    Name = "Teleport to Grinder",
+    Callback = function()
+        LocalPlayer.Character:PivotTo(CFrame.new(16.1,4,-4.6))
+        OrionLib:MakeNotification({
+            Name = "Teleport",
+            Content = "Teleported to Grinder!",
+            Image = "rbxassetid://4483362458",
+            Time = 3
+        })
+    end
+})
+
+HomeTab:AddToggle({
+    Name = "Item ESP",
+    Default = false,
+    Callback = function(Value)
+        toggleESP(Value)
+        OrionLib:MakeNotification({
+            Name = "Item ESP",
+            Content = Value and "Item ESP Enabled" or "Item ESP Disabled",
+            Image = "rbxassetid://4483362458",
+            Time = 3
+        })
+    end
+})
+
+HomeTab:AddToggle({
+    Name = "NPC ESP",
+    Default = false,
+    Callback = function(Value)
+        toggleNPCESP(Value)
+        OrionLib:MakeNotification({
+            Name = "NPC ESP",
+            Content = Value and "NPC ESP Enabled" or "NPC ESP Disabled",
+            Image = "rbxassetid://4483362458",
+            Time = 3
+        })
+    end
+})
+
+HomeTab:AddToggle({
+    Name = "Auto Tree Farm (Small Tree)",
+    Default = false,
+    Callback = function(Value)
+        AutoTreeFarmEnabled = Value
+        OrionLib:MakeNotification({
+            Name = "Auto Tree Farm",
+            Content = Value and "Auto Tree Farm Enabled" or "Auto Tree Farm Disabled",
+            Image = "rbxassetid://4483362458",
+            Time = 3
+        })
+    end
+})
+
+HomeTab:AddToggle({
+    Name = "Aimbot (Right Click)",
+    Default = false,
+    Callback = function(Value)
+        AimbotEnabled = Value
+        OrionLib:MakeNotification({
+            Name = "Aimbot",
+            Content = Value and "Enabled - Hold Right Click to aim." or "Disabled.",
+            Image = "rbxassetid://4483362458",
+            Time = 4
+        })
+    end
+})
+
+HomeTab:AddToggle({
+    Name = "Fly (WASD + Space + Shift)",
+    Default = false,
+    Callback = function(Value)
+        toggleFly(Value)
+        OrionLib:MakeNotification({
+            Name = "Fly",
+            Content = Value and "Fly Enabled" or "Fly Disabled",
+            Image = "rbxassetid://4483362458",
+            Time = 3
+        })
+    end
+})
 
 -- Teleport Tab
-local TeleTab = Window:CreateTab("🧲Teleport🧲", 4483362458)
+local TeleTab = Window:MakeTab({
+    Name = "🧲Teleport🧲",
+    Icon = "rbxassetid://4483362458",
+    PremiumOnly = false
+})
+
 for _, itemName in ipairs(teleportTargets) do
-    TeleTab:CreateButton({
+    TeleTab:AddButton({
         Name = "Teleport to " .. itemName,
         Callback = function()
             local closest, shortest = nil, math.huge
@@ -373,6 +492,7 @@ for _, itemName in ipairs(teleportTargets) do
                 if obj.Name == itemName and obj:IsA("Model") then
                     local cf = nil
                     if pcall(function() cf = obj:GetPivot() end) then
+                        -- success
                     else
                         local part = obj:FindFirstChildWhichIsA("BasePart")
                         if part then cf = part.CFrame end
@@ -389,37 +509,64 @@ for _, itemName in ipairs(teleportTargets) do
             if closest then
                 local cf = nil
                 if pcall(function() cf = closest:GetPivot() end) then
+                    -- success
                 else
                     local part = closest:FindFirstChildWhichIsA("BasePart")
                     if part then cf = part.CFrame end
                 end
                 if cf then
-                    LocalPlayer.Character:PivotTo(cf + Vector3.new(0,5,0))
+                    LocalPlayer.Character:PivotTo(cf + Vector3.new(0, 5, 0))
+                    OrionLib:MakeNotification({
+                        Name = "Teleport",
+                        Content = "Teleported to " .. itemName,
+                        Image = "rbxassetid://4483362458",
+                        Time = 3
+                    })
                 else
-                    Rayfield:Notify({Title = "Teleport Failed", Content = "Could not find a valid position to teleport.", Duration = 5, Image = 4483362458})
+                    OrionLib:MakeNotification({
+                        Name = "Teleport Failed",
+                        Content = "Could not find a valid position to teleport.",
+                        Image = "rbxassetid://4483362458",
+                        Time = 5
+                    })
                 end
             else
-                Rayfield:Notify({Title = "Item Not Found", Content = itemName .. " not found or too close to origin.", Duration = 5, Image = 4483362458})
+                OrionLib:MakeNotification({
+                    Name = "Item Not Found",
+                    Content = itemName .. " not found or too close to origin.",
+                    Image = "rbxassetid://4483362458",
+                    Time = 5
+                })
             end
         end
     })
 end
 
--- MAIN PLAYER TAB
-local MainPlayerTab = Window:CreateTab("👤main player👤", 4483362458)
-MainPlayerTab:CreateToggle({
+local MainPlayerTab = Window:MakeTab({
+    Name = "👤Main Player👤",
+    Icon = "rbxassetid://4483362458",
+    PremiumOnly = false
+})
+
+MainPlayerTab:AddToggle({
     Name = "Low GFX",
-    CurrentValue = false,
-    Callback = function(value)
-        if value then
+    Default = false,
+    Callback = function(Value)
+        if Value then
             loadstring(game:HttpGet("https://pastefy.app/zHXeYX07/raw", true))()
-            Rayfield:Notify({Title = "Low GFX", Content = "Modo Low GFX ativado!", Duration = 4, Image = 4483362458})
+            OrionLib:MakeNotification({
+                Name = "Low GFX",
+                Content = "Modo Low GFX ativado!",
+                Image = "rbxassetid://4483362458",
+                Time = 4
+            })
         else
             if game.Lighting then
                 game.Lighting.GlobalShadows = true
                 game.Lighting.FogEnd = 100000
                 game.Lighting.Brightness = 2
             end
+
             for _, obj in pairs(workspace:GetDescendants()) do
                 if obj:IsA("BasePart") then
                     obj.Material = Enum.Material.Plastic
@@ -430,69 +577,38 @@ MainPlayerTab:CreateToggle({
                     obj.Transparency = 0
                 end
             end
-            Rayfield:Notify({Title = "Low GFX", Content = "Modo Low GFX desativado!", Duration = 4, Image = 4483362458})
+
+            OrionLib:MakeNotification({
+                Name = "Low GFX",
+                Content = "Modo Low GFX desativado!",
+                Image = "rbxassetid://4483362458",
+                Time = 4
+            })
         end
     end
 })
-MainPlayerTab:CreateSlider({
+
+MainPlayerTab:AddSlider({
     Name = "Player Speed",
-    Range = {10, 90},
+    Min = 10,
+    Max = 90,
+    Default = 16,
+    Color = Color3.fromRGB(0, 150, 0),  -- Verde
     Increment = 1,
-    Suffix = "Speed",
-    CurrentValue = 16,
-    Callback = function(value)
+    ValueName = "Speed",
+    Callback = function(Value)
         local player = game.Players.LocalPlayer
         if player and player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
-            player.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = value
-            Rayfield:Notify({Title = "Player Speed", Content = "Velocidade definida para " .. tostring(value), Duration = 3, Image = 4483362458})
+            player.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = Value
+            OrionLib:MakeNotification({
+                Name = "Player Speed",
+                Content = "Velocidade definida para " .. tostring(Value),
+                Image = "rbxassetid://4483362458",
+                Time = 3
+            })
         end
     end
 })
-MainPlayerTab:CreateToggle({
-    Name = "Infinite Jump",
-    CurrentValue = false,
-    Callback = function(value)
-        InfiniteJumpEnabled = value
-        Rayfield:Notify({Title = "Infinite Jump", Content = value and "Infinite Jump ativado!" or "Infinite Jump desativado!", Duration = 4, Image = 4483362458})
-    end
-})
 
--- ⚙️CONFIGURAÇÕES
-local ConfigTab = Window:CreateTab("⚙️Configurações", 4483362458)
-ConfigTab:CreateButton({
-    Name = "Salvar Configuração",
-    Callback = function() Rayfield:Notify({Title = "Configuração", Content = "Configuração salva!", Duration = 3, Image = 4483362458}) end
-})
-ConfigTab:CreateButton({
-    Name = "Resetar Script",
-    Callback = function() Rayfield:Notify({Title = "Configuração", Content = "Script resetado!", Duration = 3, Image = 4483362458}) end
-})
-ConfigTab:CreateToggle({
-    Name = "Tema Verde",
-    CurrentValue = true,
-    Callback = function(value) -- já é verde por padrão end
-})
-
--- 🎮GAME MODS
-local ModsTab = Window:CreateTab("🎮Game Mods", 4483362458)
-ModsTab:CreateToggle({Name = "God Mode", CurrentValue = false, Callback = function(v) Rayfield:Notify({Title="God Mode",Content=v and "God Mode ON" or "God Mode OFF",Duration=3,Image=4483362458}) end})
-ModsTab:CreateToggle({Name = "No Clip", CurrentValue = false, Callback = function(v) Rayfield:Notify({Title="No Clip",Content=v and "No Clip ON" or "No Clip OFF",Duration=3,Image=4483362458}) end})
-ModsTab:CreateToggle({Name = "Super Jump", CurrentValue = false, Callback = function(v) Rayfield:Notify({Title="Super Jump",Content=v and "Super Jump ON" or "Super Jump OFF",Duration=3,Image=4483362458}) end})
-
--- 🧰UTILITÁRIOS
-local UtilTab = Window:CreateTab("🧰Utilitários", 4483362458)
-UtilTab:CreateButton({Name = "Destravar Câmera", Callback = function() Rayfield:Notify({Title="Utilitário",Content="Câmera destravada!",Duration=3,Image=4483362458}) end})
-UtilTab:CreateSlider({Name = "Gravidade", Range = {50,400}, Increment = 1, Suffix = "Grav", CurrentValue = 196, Callback = function(value) workspace.Gravity = value Rayfield:Notify({Title="Gravidade",Content="Gravidade: "..value,Duration=3,Image=4483362458}) end})
-
--- 👥SOCIAL
-local SocialTab = Window:CreateTab("👥Social", 4483362458)
-SocialTab:CreateButton({Name = "Teleportar para amigo", Callback = function() Rayfield:Notify({Title="Social",Content="Teleportado!",Duration=3,Image=4483362458}) end})
-SocialTab:CreateButton({Name = "Ver lista de jogadores", Callback = function() Rayfield:Notify({Title="Social",Content="Jogadores listados!",Duration=3,Image=4483362458}) end})
-
--- 🕵️VISUAL
-local VisualTab = Window:CreateTab("🕵️Visual", 4483362458)
-VisualTab:CreateToggle({Name = "Chams nos players", CurrentValue = false, Callback = function(v) Rayfield:Notify({Title="Chams",Content=v and "Chams ON" or "Chams OFF",Duration=3,Image=4483362458}) end})
-VisualTab:CreateToggle({Name = "Rainbow ESP", CurrentValue = false, Callback = function(v) Rayfield:Notify({Title="Rainbow ESP",Content=v and "Rainbow ESP ON" or "Rainbow ESP OFF",Duration=3,Image=4483362458}) end})
-VisualTab:CreateToggle({Name = "Mostrar HP dos NPCs", CurrentValue = false, Callback = function(v) Rayfield:Notify({Title="HP NPC",Content=v and "HP ON" or "HP OFF",Duration=3,Image=4483362458}) end})
-
--- Fim do Script!
+-- Inicializar Orion
+OrionLib:Init()
